@@ -1,3 +1,5 @@
+// Update your app/api/upload/route.ts file
+
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -24,7 +26,7 @@ export async function POST(req: NextRequest) {
     // Create a unique filename
     const buffer = Buffer.from(await file.arrayBuffer());
     const uniqueId = nanoid(8);
-    const extension = file.name.split(".").pop();
+    const extension = file.name.split(".").pop() || "jpg"; // Default to jpg if no extension
     const filename = `${uniqueId}.${extension}`;
 
     // Ensure directory exists
@@ -39,16 +41,24 @@ export async function POST(req: NextRequest) {
     const path = join(uploadDir, filename);
     await writeFile(path, buffer);
 
-    // Add this debug log
+    // Log for debugging
     console.log(`File saved to: ${path}`);
 
-    // Return the path that can be used in markdown
+    // Return a properly formatted URL path with leading slash
+    // This is critical for consistent image referencing
+    const url = `/uploads/${filename}`;
+
     return NextResponse.json({
-      url: `/uploads/${filename}`,
+      url: url,
       message: "File uploaded successfully",
     });
   } catch (error: any) {
     console.error("Error uploading image:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: error.message || "An unknown error occurred",
+      },
+      { status: 500 }
+    );
   }
 }
