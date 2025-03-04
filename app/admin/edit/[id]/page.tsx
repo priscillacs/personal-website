@@ -2,16 +2,17 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPostById } from "../../../../lib/blog-utils";
-import EditPostForm from "../../../admin/components/EditPostForm";
+import EditPostForm from "../../components/EditPostForm";
 
-// Define the props type for TypeScript
-interface EditPostPageProps {
+// Update the interface to match Next.js 15 requirements
+interface PageProps {
   params: {
     id: string;
   };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function EditPostPage({ params }: EditPostPageProps) {
+export default async function EditPostPage({ params }: PageProps) {
   try {
     const { id } = params;
 
@@ -59,7 +60,7 @@ export const revalidate = 0;
 // Optional: generate metadata for SEO
 export async function generateMetadata({
   params,
-}: EditPostPageProps): Promise<Metadata> {
+}: PageProps): Promise<Metadata> {
   const post = await getPostById(params.id);
 
   return {
