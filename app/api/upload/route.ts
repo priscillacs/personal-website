@@ -1,5 +1,3 @@
-// Update your app/api/upload/route.ts file
-
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -44,12 +42,18 @@ export async function POST(req: NextRequest) {
     // Log for debugging
     console.log(`File saved to: ${path}`);
 
-    // Return a properly formatted URL path with leading slash
-    // This is critical for consistent image referencing
-    const url = `/uploads/${filename}`;
+    // IMPORTANT: Return a properly formatted URL path as a string
+    const uploadPath = `/uploads/${filename}`;
+
+    console.log(
+      "[UPLOAD-API] Returning URL:",
+      uploadPath,
+      "Type:",
+      typeof uploadPath
+    );
 
     return NextResponse.json({
-      url: url,
+      url: uploadPath, // This MUST be a string
       message: "File uploaded successfully",
     });
   } catch (error: any) {

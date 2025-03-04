@@ -11,6 +11,7 @@ import {
   normalizeImagePath,
   validateMarkdownImages,
 } from "../../../utils/imageUtils";
+
 // Categories for the dropdown
 const categories = [
   { name: "Software Development", value: "software-development" },
@@ -43,6 +44,31 @@ export default function NewPostPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Handle form field changes
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value, type } = e.target;
+
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData({ ...formData, [name]: checked });
+    } else {
+      setFormData({ ...formData, [name]: value });
+
+      // Auto-generate slug when title changes
+      if (name === "title" && !formData.slug) {
+        setFormData({
+          ...formData,
+          title: value,
+          slug: generateSlug(value),
+        });
+      }
+    }
+  };
 
   // Function to upload image
   const imageUploadFunction = useCallback(
@@ -99,6 +125,50 @@ export default function NewPostPage() {
         input.type = "file";
         input.accept = "image/*";
 
+        // Helper function defined inline to extract a string URL from any type
+        const extractStringUrl = (url: any): string => {
+          // Handle null/undefined
+          if (url === null || url === undefined) {
+            console.warn("[IMAGE-UPLOAD] URL is null or undefined");
+            return "#";
+          }
+
+          // If it's already a string, just return it
+          if (typeof url === "string") {
+            return url;
+          }
+
+          // If it's an object, try to extract a path property or toString it
+          if (typeof url === "object") {
+            console.warn(
+              "[IMAGE-UPLOAD] URL is an object:",
+              JSON.stringify(url)
+            );
+
+            // Check for common properties that might contain the path
+            if (url.path && typeof url.path === "string") {
+              return url.path;
+            }
+            if (url.url && typeof url.url === "string") {
+              return url.url;
+            }
+
+            // Last resort: stringify the object
+            try {
+              return JSON.stringify(url);
+            } catch (e) {
+              console.error(
+                "[IMAGE-UPLOAD] Failed to stringify URL object:",
+                e
+              );
+              return "#";
+            }
+          }
+
+          // For any other type, convert to string
+          return String(url);
+        };
+
         // When file is selected, upload it
         input.onchange = async () => {
           const file = input.files?.[0];
@@ -145,28 +215,37 @@ export default function NewPostPage() {
             // Parse the response
             const data = await response.json();
             console.log(`[IMAGE-UPLOAD] Response data:`, data);
+            console.log(`[IMAGE-UPLOAD] URL type:`, typeof data.url);
+            console.log(`[IMAGE-UPLOAD] URL value:`, data.url);
 
             // Validate the URL
-            if (!data.url) {
+            if (data.url === undefined || data.url === null) {
               console.error(`[IMAGE-UPLOAD] No URL in response`);
               throw new Error("Server didn't return an image URL");
             }
 
-            // Debug log the URL before processing
-            debugImagePath(data.url, "Raw URL from upload response");
+            // Extract a string URL using our helper function
+            const url = extractStringUrl(data.url);
 
-            // Normalize the URL to ensure it has a leading slash
-            const url = normalizeImagePath(data.url);
+            console.log(`[IMAGE-UPLOAD] Extracted URL:`, url);
+            console.log(`[IMAGE-UPLOAD] Extracted URL type:`, typeof url);
 
-            // Debug log the normalized URL
-            debugImagePath(url, "Normalized URL for markdown");
+            // Ensure URL starts with a slash if it's a relative path
+            const formattedUrl =
+              url.startsWith("http") || url.startsWith("/") ? url : `/${url}`;
+
+            console.log(`[IMAGE-UPLOAD] Formatted URL:`, formattedUrl);
 
             // Sanitize filename for safe markdown
-            const altText = sanitizeFilename(file.name);
+            const altText = file.name
+              .replace(/[[\]()]/g, "")
+              .replace(/[&+$~%'":*?<>{}]/g, "")
+              .trim();
+
             console.log(`[IMAGE-UPLOAD] Using alt text: ${altText}`);
 
             // Create the markdown with the correct URL
-            const imageMarkdown = `![${altText}](${url})`;
+            const imageMarkdown = `![${altText}](${formattedUrl})`;
             console.log(`[IMAGE-UPLOAD] Inserting markdown: ${imageMarkdown}`);
 
             // Replace loading placeholder with actual image markdown
@@ -177,7 +256,7 @@ export default function NewPostPage() {
             );
 
             console.log(`[IMAGE-UPLOAD] Successfully inserted image`);
-          } catch (error) {
+          } catch (error: any) {
             // Log the full error details
             console.error(`[IMAGE-UPLOAD] Error:`, error);
 
@@ -231,7 +310,7 @@ export default function NewPostPage() {
       delay: 5000,
     },
     toolbar: customToolbar, // Use our custom toolbar here
-    previewRender: (text) => {
+    previewRender: (text: string) => {
       // Safe preview rendering
       try {
         // Process the markdown text to fix any relative image paths
@@ -246,6 +325,7 @@ export default function NewPostPage() {
       }
     },
   };
+
   // Memoize the editor change handler to prevent recreating on each render
   const handleEditorChange = useCallback((value: string) => {
     setFormData((prevData) => ({
@@ -294,6 +374,21 @@ export default function NewPostPage() {
       );
       setIsSubmitting(false);
     }
+  };
+
+  // Helper function for debugging image paths
+  const debugImagePath = (path: any, context: string = "unspecified") => {
+    console.log(`[IMAGE-DEBUG] Context: ${context}`);
+    console.log(`[IMAGE-DEBUG] Type: ${typeof path}`);
+    console.log(`[IMAGE-DEBUG] Value: ${path}`);
+  };
+
+  // Helper function to sanitize filenames
+  const sanitizeFilename = (filename: string): string => {
+    return filename
+      .replace(/[[\]()]/g, "") // Remove markdown special characters
+      .replace(/[&+$~%'":*?<>{}]/g, "") // Remove other special characters
+      .trim();
   };
 
   return (

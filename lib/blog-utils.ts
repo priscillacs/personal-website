@@ -163,28 +163,10 @@ export async function updatePost(id: string, postData: Partial<IPost>) {
 }
 
 export async function deletePost(id: string) {
-  try {
-    await connectToDatabase();
+  await connectToDatabase();
 
-    // Find the post first to check if it exists
-    const post = await Post.findById(id);
-
-    if (!post) {
-      return { success: false, message: "Post not found" };
-    }
-
-    // Delete the post
-    const result = await Post.findByIdAndDelete(id);
-
-    if (!result) {
-      return { success: false, message: "Failed to delete post" };
-    }
-
-    return { success: true, message: "Post deleted successfully" };
-  } catch (error) {
-    console.error("Error deleting post:", error);
-    return { success: false, message: "Server error while deleting post" };
-  }
+  await Post.findByIdAndDelete(id);
+  return { success: true };
 }
 
 // Helper function to unescape HTML entities

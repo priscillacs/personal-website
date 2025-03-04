@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { getAllPosts } from "../../lib/blog-utils";
-import AdminPostList from "./components/AdminPostList";
+import AdminPostList from "./AdminPostList";
 
-// This is a server component
+// Remove "use client" - this is now a server component
 export default async function AdminPage() {
-  // Fetch the posts on the server
+  // This will run on the server
   const posts = await getAllPosts();
 
   // Convert MongoDB objects to plain objects with proper ID string conversion

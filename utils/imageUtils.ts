@@ -87,3 +87,71 @@ export const validateMarkdownImages = (markdown: string): boolean => {
 
   return true;
 };
+
+export const extractStringUrl = (url: any): string => {
+  // Handle null/undefined
+  if (url === null || url === undefined) {
+    console.warn("[IMAGE-UTILS] URL is null or undefined");
+    return "#";
+  }
+
+  // If it's already a string, just return it
+  if (typeof url === "string") {
+    return url;
+  }
+
+  // If it's an object, try to extract a path property or toString it
+  if (typeof url === "object") {
+    console.warn("[IMAGE-UTILS] URL is an object:", JSON.stringify(url));
+
+    // Check for common properties that might contain the path
+    if (url.path && typeof url.path === "string") {
+      return url.path;
+    }
+    if (url.url && typeof url.url === "string") {
+      return url.url;
+    }
+
+    // Last resort: stringify the object
+    try {
+      return JSON.stringify(url);
+    } catch (e) {
+      console.error("[IMAGE-UTILS] Failed to stringify URL object:", e);
+      return "#";
+    }
+  }
+
+  // For any other type, convert to string
+  return String(url);
+};
+
+export function ensureStringUrl(value: any): string {
+  // Handle null/undefined
+  if (value === null || value === undefined) {
+    return "#";
+  }
+
+  // Already a string
+  if (typeof value === "string") {
+    // Ensure leading slash for relative URLs
+    if (!value.startsWith("http") && !value.startsWith("/")) {
+      return "/" + value;
+    }
+    return value;
+  }
+
+  // Handle objects - try to get path property
+  if (typeof value === "object") {
+    if (value.path && typeof value.path === "string") {
+      return ensureStringUrl(value.path);
+    }
+    if (value.url && typeof value.url === "string") {
+      return ensureStringUrl(value.url);
+    }
+    // Don't stringify objects for URLs - use a fallback
+    return "#";
+  }
+
+  // Convert other types to string
+  return String(value);
+}
