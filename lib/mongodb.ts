@@ -1,8 +1,9 @@
+// lib/mongodb.ts
 import mongoose from "mongoose";
 
 // Define types for the global variable
 declare global {
-  let mongoose:
+  var mongoose:
     | {
         conn: typeof mongoose | null;
         promise: Promise<typeof mongoose> | null;
@@ -10,8 +11,7 @@ declare global {
     | undefined;
 }
 
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/priscilla-website";
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   throw new Error(
@@ -24,14 +24,7 @@ if (!MONGODB_URI) {
  * in development. This prevents connections growing exponentially
  * during API Route usage.
  */
-// Define the cached type explicitly
-type MongooseCache = {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
-};
-
-// Initialize cached with proper type checking
-const cached: MongooseCache = global.mongoose || { conn: null, promise: null };
+const cached = global.mongoose || { conn: null, promise: null };
 
 // Set the global cache
 if (!global.mongoose) {
@@ -46,6 +39,8 @@ async function connectToDatabase() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      // Remove the appName option and add a valid appName if needed
+      appName: "priscilla-website", // Valid app name
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {

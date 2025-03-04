@@ -1,3 +1,4 @@
+// models/Posts.ts
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IPost extends Document {
@@ -21,11 +22,10 @@ const PostSchema: Schema = new Schema({
   excerpt: { type: String },
   content: { type: String, required: true },
   coverImage: { type: String },
-  // Update the enum values to match your normalized categories
+  // Use String type without enum to be more flexible
   category: {
     type: String,
     required: true,
-    enum: ["software-development", "travel", "personal", "project"],
     default: "software-development",
   },
   tags: { type: [String] },
@@ -36,7 +36,7 @@ const PostSchema: Schema = new Schema({
   publishedAt: { type: Date, default: null },
 });
 
-// Use mongoose.models to prevent model recompilation error in development
+// Create a model safeguard in case the model is already defined (for Next.js hot reloading)
 const Post = mongoose.models.Post || mongoose.model<IPost>("Post", PostSchema);
 
 export default Post;
