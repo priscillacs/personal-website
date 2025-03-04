@@ -42,24 +42,9 @@ export async function POST(req: NextRequest) {
     // Add this debug log
     console.log(`File saved to: ${path}`);
 
-<<<<<<< HEAD
-    // IMPORTANT: Return a properly formatted URL path as a string
-    const uploadPath = `/uploads/${filename}`;
-
-    console.log(
-      "[UPLOAD-API] Returning URL:",
-      uploadPath,
-      "Type:",
-      typeof uploadPath
-    );
-
-    return NextResponse.json({
-      url: uploadPath, // This MUST be a string
-=======
     // Return the path that can be used in markdown
     return NextResponse.json({
       url: `/uploads/${filename}`,
->>>>>>> parent of a7cc176 (Fix upload image)
       message: "File uploaded successfully",
     });
   } catch (error: any) {

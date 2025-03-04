@@ -1,5 +1,4 @@
-// Add this to your form component
-
+"use client";
 import { useState, useEffect } from "react";
 
 import { getCategories } from "../../../../../lib/blog-utils";
