@@ -3,14 +3,18 @@ import { getPostById } from "../../../../lib/blog-utils";
 import { notFound } from "next/navigation";
 import EditPostForm from "../../../components/EditPostForm";
 
-// Define the params type
+// Update the type definition
 export type PageProps = {
   params: {
     id: string;
   };
 };
 
-export default async function EditPostPage({ params }: PageProps) {
+export default async function EditPostPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   // Fetch the post data by ID
   const post = await getPostById(params.id);
 
