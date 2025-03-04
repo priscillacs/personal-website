@@ -20,8 +20,8 @@ const projects = [
       "Firebase",
       "Neo4j",
     ],
-    github: "#",
-    demo: "#",
+    // github: "#",
+    // demo: "#",
     featured: false,
   },
   {
