@@ -1,12 +1,18 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPostById } from "../../../../lib/blog-utils";
-import EditPostForm from "../../components/EditPostForm";
+import EditPostForm from "../../../admin/components/EditPostForm";
 
-export default async function EditPostPage(props: any) {
+// Define the props type for TypeScript
+interface EditPostPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default async function EditPostPage({ params }: EditPostPageProps) {
   try {
-    // Access id using SearchParams or context instead
-    const id = props.params?.id;
+    const { id } = params;
 
     if (!id) {
       return notFound();
@@ -48,3 +54,15 @@ export default async function EditPostPage(props: any) {
 // These configuration exports help Next.js understand how to handle this page
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+// Optional: generate metadata for SEO
+export async function generateMetadata({
+  params,
+}: EditPostPageProps): Promise<Metadata> {
+  const post = await getPostById(params.id);
+
+  return {
+    title: post ? `Edit: ${post.title}` : "Edit Post",
+    description: "Edit an existing blog post",
+  };
+}
