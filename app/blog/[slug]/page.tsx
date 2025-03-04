@@ -1,5 +1,3 @@
-// Update app/blog/[slug]/page.tsx
-
 import { getPostBySlug, getAllPosts } from "../../../lib/blog-utils";
 import { notFound } from "next/navigation";
 import PostNavigation from "../components/PostNavigation";
@@ -16,20 +14,7 @@ interface PostPageProps {
 export async function generateMetadata({
   params,
 }: PostPageProps): Promise<Metadata> {
-  const post = await getPostBySlug(params.slug);
-
-  if (!post) {
-    return {
-      title: "Post Not Found",
-      description: "The requested post could not be found",
-    };
-  }
-
-  return {
-    title: `${post.title} | Blog | Priscilla Celine`,
-    description:
-      post.excerpt || `Read ${post.title} on Priscilla Celine's blog`,
-  };
+  // Your existing metadata generation
 }
 
 export default async function PostPage({ params }: PostPageProps) {
@@ -59,7 +44,7 @@ export default async function PostPage({ params }: PostPageProps) {
         }
       : undefined;
 
-  // Ensure content is clean and safe before processing
+  // Ensure content is unescaped before processing
   let cleanContent = post.content || "";
 
   // Unescape HTML entities if they exist
@@ -70,38 +55,20 @@ export default async function PostPage({ params }: PostPageProps) {
     .replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'");
 
-  // Fix broken image references by replacing them with a warning message
-  cleanContent = cleanContent.replace(
-    /!\[(.*?)\]\(\s*\)/g,
-    "![Missing image]() <!-- Missing image reference -->"
-  );
-
-  // Add base path to relative image URLs if needed
-  cleanContent = cleanContent.replace(
-    /!\[(.*?)\]\((?!http|\/)(.*?)\)/g,
-    "![$1](/$2)"
-  );
-
-  // Handle potential rendering errors
-  let htmlContent = "";
-  try {
-    htmlContent = configuredMarked(cleanContent);
-  } catch (error) {
-    console.error("Error rendering markdown:", error);
-    htmlContent = `<div class="p-4 text-red-600 bg-red-50 rounded mb-4">
-      Error rendering content. Please contact the administrator.
-    </div>
-    <p>${cleanContent}</p>`;
-  }
+  //
+  // Inside your component, before rendering
+  const htmlContent = configuredMarked(post.content);
+  console.log("Markdown content:", post.content);
+  console.log("Rendered HTML:", htmlContent);
+  // Inside your component
+  console.log("Post last updated:", post.updatedAt);
 
   return (
     <article className="max-w-4xl mx-auto px-4 py-12">
       <header className="mb-8">
         <h1 className="text-4xl font-bold mb-2">{post.title}</h1>
         <div className="text-gray-600 mb-4">
-          {post.publishedAt && (
-            <time>{formatDate(new Date(post.publishedAt))}</time>
-          )}
+          {post.date && <time>{formatDate(post.date)}</time>}
           {post.author && <span> · {post.author}</span>}
         </div>
         {post.coverImage && (

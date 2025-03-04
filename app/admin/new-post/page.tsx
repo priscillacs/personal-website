@@ -7,10 +7,6 @@ import { FaArrowLeft, FaSave } from "react-icons/fa";
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
 import { configuredMarked } from "../../../utils/markdownConfig"; // Import our custom marked configuration
-import {
-  normalizeImagePath,
-  validateMarkdownImages,
-} from "../../../utils/imageUtils";
 
 // Categories for the dropdown
 const categories = [
@@ -45,31 +41,6 @@ export default function NewPostPage() {
   const [previewMode, setPreviewMode] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Handle form field changes
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value, type } = e.target;
-
-    if (type === "checkbox") {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData({ ...formData, [name]: checked });
-    } else {
-      setFormData({ ...formData, [name]: value });
-
-      // Auto-generate slug when title changes
-      if (name === "title" && !formData.slug) {
-        setFormData({
-          ...formData,
-          title: value,
-          slug: generateSlug(value),
-        });
-      }
-    }
-  };
-
   // Function to upload image
   const imageUploadFunction = useCallback(
     async (
@@ -94,11 +65,9 @@ export default function NewPostPage() {
         const data = await response.json();
         console.log("Upload response:", data); // Debug log
 
-        // Make sure URL always starts with a slash for proper path reference
+        // Ensure URL is correctly formatted with leading slash if missing
         const url = data.url.startsWith("/") ? data.url : `/${data.url}`;
-
-        // Use the full URL format (starting with /) to ensure image is found correctly
-        onSuccess(url);
+        onSuccess(url); // Pass the properly formatted URL
       } catch (error: any) {
         console.error("Error uploading image:", error);
         onError(error.message || "Error uploading image");
@@ -108,222 +77,130 @@ export default function NewPostPage() {
   );
 
   // SimpleMDE custom options
-  const customToolbar = [
-    "bold",
-    "italic",
-    "heading",
-    "|",
-    "quote",
-    "unordered-list",
-    "ordered-list",
-    "|",
-    {
-      name: "custom-image",
-      action: (editor) => {
-        // Create a file input
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "image/*";
-
-        // Helper function defined inline to extract a string URL from any type
-        const extractStringUrl = (url: any): string => {
-          // Handle null/undefined
-          if (url === null || url === undefined) {
-            console.warn("[IMAGE-UPLOAD] URL is null or undefined");
-            return "#";
-          }
-
-          // If it's already a string, just return it
-          if (typeof url === "string") {
-            return url;
-          }
-
-          // If it's an object, try to extract a path property or toString it
-          if (typeof url === "object") {
-            console.warn(
-              "[IMAGE-UPLOAD] URL is an object:",
-              JSON.stringify(url)
-            );
-
-            // Check for common properties that might contain the path
-            if (url.path && typeof url.path === "string") {
-              return url.path;
-            }
-            if (url.url && typeof url.url === "string") {
-              return url.url;
-            }
-
-            // Last resort: stringify the object
-            try {
-              return JSON.stringify(url);
-            } catch (e) {
-              console.error(
-                "[IMAGE-UPLOAD] Failed to stringify URL object:",
-                e
-              );
-              return "#";
-            }
-          }
-
-          // For any other type, convert to string
-          return String(url);
-        };
-
-        // When file is selected, upload it
-        input.onchange = async () => {
-          const file = input.files?.[0];
-          if (!file) return;
-
-          // Log the file being uploaded
-          console.log(`[IMAGE-UPLOAD] Starting upload for file: ${file.name}`);
-
-          // Show loading indicator in editor
-          const cm = editor.codemirror;
-          const cursorPos = cm.getCursor();
-          const loadingText = "![Uploading image...](...)";
-          cm.replaceRange(loadingText, cursorPos);
-          const loadingPlaceholderPos = {
-            from: cursorPos,
-            to: {
-              line: cursorPos.line,
-              ch: cursorPos.ch + loadingText.length,
-            },
-          };
-
-          // Create form data for upload
-          const formData = new FormData();
-          formData.append("image", file);
-
-          try {
-            // Upload the file
-            console.log(`[IMAGE-UPLOAD] Sending request to /api/upload`);
-            const response = await fetch("/api/upload", {
-              method: "POST",
-              body: formData,
-            });
-
-            // Log the response status
-            console.log(`[IMAGE-UPLOAD] Response status: ${response.status}`);
-
-            // Handle non-OK responses
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.error(`[IMAGE-UPLOAD] Error response: ${errorText}`);
-              throw new Error(`Upload failed with status ${response.status}`);
-            }
-
-            // Parse the response
-            const data = await response.json();
-            console.log(`[IMAGE-UPLOAD] Response data:`, data);
-            console.log(`[IMAGE-UPLOAD] URL type:`, typeof data.url);
-            console.log(`[IMAGE-UPLOAD] URL value:`, data.url);
-
-            // Validate the URL
-            if (data.url === undefined || data.url === null) {
-              console.error(`[IMAGE-UPLOAD] No URL in response`);
-              throw new Error("Server didn't return an image URL");
-            }
-
-            // Extract a string URL using our helper function
-            const url = extractStringUrl(data.url);
-
-            console.log(`[IMAGE-UPLOAD] Extracted URL:`, url);
-            console.log(`[IMAGE-UPLOAD] Extracted URL type:`, typeof url);
-
-            // Ensure URL starts with a slash if it's a relative path
-            const formattedUrl =
-              url.startsWith("http") || url.startsWith("/") ? url : `/${url}`;
-
-            console.log(`[IMAGE-UPLOAD] Formatted URL:`, formattedUrl);
-
-            // Sanitize filename for safe markdown
-            const altText = file.name
-              .replace(/[[\]()]/g, "")
-              .replace(/[&+$~%'":*?<>{}]/g, "")
-              .trim();
-
-            console.log(`[IMAGE-UPLOAD] Using alt text: ${altText}`);
-
-            // Create the markdown with the correct URL
-            const imageMarkdown = `![${altText}](${formattedUrl})`;
-            console.log(`[IMAGE-UPLOAD] Inserting markdown: ${imageMarkdown}`);
-
-            // Replace loading placeholder with actual image markdown
-            cm.replaceRange(
-              imageMarkdown,
-              loadingPlaceholderPos.from,
-              loadingPlaceholderPos.to
-            );
-
-            console.log(`[IMAGE-UPLOAD] Successfully inserted image`);
-          } catch (error: any) {
-            // Log the full error details
-            console.error(`[IMAGE-UPLOAD] Error:`, error);
-
-            // Replace loading placeholder with error message
-            cm.replaceRange(
-              `<!-- Failed to upload image: ${
-                error.message || "Unknown error"
-              } -->`,
-              loadingPlaceholderPos.from,
-              loadingPlaceholderPos.to
-            );
-
-            // Show alert to user
-            alert(
-              `Failed to upload image: ${error.message || "Unknown error"}`
-            );
-          }
-        };
-
-        // Trigger file selection
-        input.click();
-      },
-      className: "fa fa-image",
-      title: "Upload Image",
-    },
-    "link",
-    "|",
-    "preview",
-    "side-by-side",
-    "fullscreen",
-    "|",
-    "guide",
-  ];
-
-  // Use this custom toolbar in your SimpleMDE options:
   const editorOptions = {
     spellChecker: false,
     placeholder: "Write your post content here...",
     status: ["lines", "words", "cursor"],
     renderingConfig: {
       singleLineBreaks: false,
-      codeSyntaxHighlighting: false,
+      codeSyntaxHighlighting: false, // Disable syntax highlighting while typing
     },
-    autofocus: false,
+    autofocus: false, // Don't auto focus on load
     indentWithTabs: true,
     tabSize: 4,
     lineWrapping: true,
     autosave: {
       enabled: true,
-      uniqueId: "new-post-content",
-      delay: 5000,
+      uniqueId: "new-post-content", // Use unique ID for autosave
+      delay: 5000, // Save every 5 seconds instead of the default 1 second
     },
-    toolbar: customToolbar, // Use our custom toolbar here
-    previewRender: (text: string) => {
-      // Safe preview rendering
-      try {
-        // Process the markdown text to fix any relative image paths
-        const processedText = text.replace(
-          /!\[(.*?)\]\((?!http|\/)(.*?)\)/g,
-          "![$1](/$2)"
-        );
-        return configuredMarked(processedText || "");
-      } catch (error) {
-        console.error("Error rendering preview:", error);
-        return `<div class="p-4 text-red-600 bg-red-50 rounded">Error rendering preview</div>`;
+    previewRender: useCallback((text) => {
+      // Only perform rendering when actually in preview mode
+      return configuredMarked(text || "");
+    }, []),
+
+    // Add custom upload handler for images
+    toolbar: [
+      "bold",
+      "italic",
+      "heading",
+      "|",
+      "quote",
+      "unordered-list",
+      "ordered-list",
+      "|",
+      {
+        name: "custom-image",
+        action: (editor) => {
+          // Create a file input
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = "image/*";
+
+          // When file is selected, upload it
+          input.onchange = async () => {
+            const file = input.files?.[0];
+            if (!file) return;
+
+            // Show loading indicator in editor
+            const cm = editor.codemirror;
+            const cursorPos = cm.getCursor();
+            const loadingText = "![Uploading image...](...)";
+            cm.replaceRange(loadingText, cursorPos);
+            const loadingPlaceholderPos = {
+              from: cursorPos,
+              to: {
+                line: cursorPos.line,
+                ch: cursorPos.ch + loadingText.length,
+              },
+            };
+
+            // Upload the file
+            imageUploadFunction(
+              file,
+              (url) => {
+                // Make sure URL is absolute (without domain) and points to public folder
+                const publicUrl = url.startsWith("/") ? url : `/${url}`;
+
+                // Replace loading placeholder with actual image markdown
+                // Use syntax that's more explicit for the markdown parser
+                const imageMarkdown = `![Image](${publicUrl} "Image")`;
+                cm.replaceRange(
+                  imageMarkdown,
+                  loadingPlaceholderPos.from,
+                  loadingPlaceholderPos.to
+                );
+              },
+              (error) => {
+                // Error handling remains the same
+                cm.replaceRange(
+                  `<!-- Image upload failed: ${error} -->`,
+                  loadingPlaceholderPos.from,
+                  loadingPlaceholderPos.to
+                );
+              }
+            );
+          };
+
+          // Trigger file selection
+          input.click();
+        },
+        className: "fa fa-image",
+        title: "Upload Image",
+      },
+      "link",
+      "|",
+      "preview",
+      "side-by-side",
+      "fullscreen",
+      "|",
+      "guide",
+    ],
+  };
+
+  // Handle input changes
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value, type } = e.target;
+
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData({ ...formData, [name]: checked });
+    } else {
+      // If title is changed, generate a slug
+      if (name === "title" && !formData.slug) {
+        setFormData({
+          ...formData,
+          [name]: value,
+          slug: generateSlug(value),
+        });
+      } else {
+        setFormData({ ...formData, [name]: value });
       }
-    },
+    }
   };
 
   // Memoize the editor change handler to prevent recreating on each render
@@ -374,21 +251,6 @@ export default function NewPostPage() {
       );
       setIsSubmitting(false);
     }
-  };
-
-  // Helper function for debugging image paths
-  const debugImagePath = (path: any, context: string = "unspecified") => {
-    console.log(`[IMAGE-DEBUG] Context: ${context}`);
-    console.log(`[IMAGE-DEBUG] Type: ${typeof path}`);
-    console.log(`[IMAGE-DEBUG] Value: ${path}`);
-  };
-
-  // Helper function to sanitize filenames
-  const sanitizeFilename = (filename: string): string => {
-    return filename
-      .replace(/[[\]()]/g, "") // Remove markdown special characters
-      .replace(/[&+$~%'":*?<>{}]/g, "") // Remove other special characters
-      .trim();
   };
 
   return (
@@ -477,59 +339,27 @@ export default function NewPostPage() {
               {formData.excerpt || "No excerpt provided"}
             </p>
 
-            {/* Preview Content with Image Validation */}
-            {(() => {
-              // Clone the content to avoid modifying the original state
-              let previewContent = formData.content || "";
+            <div
+              className="prose max-w-none"
+              dangerouslySetInnerHTML={{
+                __html:
+                  configuredMarked(formData.content) || "No content provided",
+              }}
+            />
 
-              // Check if there are any problematic image references
-              const hasValidImages = validateMarkdownImages(previewContent);
-
-              if (!hasValidImages) {
-                // Log a warning
-                console.warn("Invalid image references detected in markdown");
-
-                // Fix broken image references
-                previewContent = previewContent
-                  // Fix empty references
-                  .replace(/!\[(.*?)\]\(\s*\)/g, "![Image](#)")
-                  // Fix [object Object] references
-                  .replace(/!\[(.*?)\]\(\[object Object\]\)/g, "![Image](#)")
-                  // Add base path to relative URLs
-                  .replace(
-                    /!\[(.*?)\]\((?!http|\/)(.*?)\)/g,
-                    (match, alt, path) => {
-                      return `![${alt}](/${path})`;
-                    }
-                  );
-              }
-
-              try {
-                // Render the corrected markdown
-                const renderedContent = configuredMarked(previewContent);
-                return (
-                  <div
-                    className="prose max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: renderedContent || "No content provided",
-                    }}
-                  />
-                );
-              } catch (error) {
-                console.error("Error rendering markdown preview:", error);
-                return (
-                  <div className="p-4 text-red-600 bg-red-50 rounded mb-4">
-                    <p>
-                      Error rendering preview. Please check your content for
-                      formatting issues.
-                    </p>
-                    <pre className="mt-2 text-sm bg-red-100 p-2 rounded overflow-x-auto">
-                      {String(error)}
-                    </pre>
-                  </div>
-                );
-              }
-            })()}
+            {/* Debug image test */}
+            {previewMode && (
+              <div className="mb-4 p-2 border border-dashed border-gray-300">
+                <p className="text-xs text-gray-500 mb-2">Debug Image Test:</p>
+                <img
+                  src="/uploads/jX2jmCC2.jpg"
+                  alt="Test Image"
+                  width="300"
+                  height="auto"
+                  className="blog-post-image"
+                />
+              </div>
+            )}
 
             {formData.tags && (
               <div className="mt-8 flex flex-wrap gap-2">

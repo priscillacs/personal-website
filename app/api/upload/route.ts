@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     // Create a unique filename
     const buffer = Buffer.from(await file.arrayBuffer());
     const uniqueId = nanoid(8);
-    const extension = file.name.split(".").pop() || "jpg"; // Default to jpg if no extension
+    const extension = file.name.split(".").pop();
     const filename = `${uniqueId}.${extension}`;
 
     // Ensure directory exists
@@ -39,9 +39,10 @@ export async function POST(req: NextRequest) {
     const path = join(uploadDir, filename);
     await writeFile(path, buffer);
 
-    // Log for debugging
+    // Add this debug log
     console.log(`File saved to: ${path}`);
 
+<<<<<<< HEAD
     // IMPORTANT: Return a properly formatted URL path as a string
     const uploadPath = `/uploads/${filename}`;
 
@@ -54,15 +55,15 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       url: uploadPath, // This MUST be a string
+=======
+    // Return the path that can be used in markdown
+    return NextResponse.json({
+      url: `/uploads/${filename}`,
+>>>>>>> parent of a7cc176 (Fix upload image)
       message: "File uploaded successfully",
     });
   } catch (error: any) {
     console.error("Error uploading image:", error);
-    return NextResponse.json(
-      {
-        error: error.message || "An unknown error occurred",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
