@@ -4,15 +4,12 @@ import { notFound } from "next/navigation";
 import { getPostById } from "../../../../lib/blog-utils";
 import EditPostForm from "../../components/EditPostForm";
 
-// Rename to avoid conflict with Next.js internal types
-interface EditPostPageParams {
-  params: {
-    id: string;
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
-
-export default async function EditPostPage({ params }: EditPostPageParams) {
+// Fixed params type to match Next.js expectations
+export default async function EditPostPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   try {
     const { id } = params;
 
@@ -60,7 +57,9 @@ export const revalidate = 0;
 // Optional: generate metadata for SEO
 export async function generateMetadata({
   params,
-}: EditPostPageParams): Promise<Metadata> {
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
   const post = await getPostById(params.id);
 
   return {

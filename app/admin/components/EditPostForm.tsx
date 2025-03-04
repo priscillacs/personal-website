@@ -1,10 +1,10 @@
+// app/admin/components/EditPostForm.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FaArrowLeft, FaSave } from "react-icons/fa";
-import RichTextEditor from "./RichTextEditor";
 
 // Use same categories as in your new post page
 const categories = [
@@ -13,17 +13,28 @@ const categories = [
   { id: "personal", name: "Personal" },
   { id: "project", name: "Project" },
 ];
-interface EditPostFormProps {
-  initialData: {
-    _id: string;
-    title: string;
-    content: string;
-    slug: string;
-    // Add other post properties here
-    [key: string]: any;
-  };
+
+// Define the Post interface with proper TypeScript types
+interface Post {
+  _id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content: string;
+  category?: string;
+  tags?: string[];
+  published: boolean;
+  featured?: boolean;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  publishedAt?: string | null;
 }
-export default function EditPostForm({ initialData }) {
+
+interface EditPostFormProps {
+  initialData: Post;
+}
+
+export default function EditPostForm({ initialData }: EditPostFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     title: initialData.title || "",
@@ -35,17 +46,30 @@ export default function EditPostForm({ initialData }) {
     published: initialData.published || false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
-    });
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value, type } = e.target;
+
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData({
+        ...formData,
+        [name]: checked,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrorMessage(null);
@@ -77,7 +101,7 @@ export default function EditPostForm({ initialData }) {
 
       router.push("/admin");
       router.refresh(); // Refresh the page to show updated data
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating post:", error);
       setErrorMessage(
         error.message ||
@@ -157,11 +181,14 @@ export default function EditPostForm({ initialData }) {
           >
             Content *
           </label>
-          <RichTextEditor
+          <textarea
+            id="content"
+            name="content"
             value={formData.content}
-            onChange={(newContent) =>
-              setFormData({ ...formData, content: newContent })
-            }
+            onChange={handleChange}
+            required
+            rows={15}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono"
           />
           <p className="mt-1 text-sm text-gray-500">
             Use Markdown syntax for formatting. For example, use ### for
