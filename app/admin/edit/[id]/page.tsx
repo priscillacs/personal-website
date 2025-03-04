@@ -3,15 +3,15 @@ import { getPostById } from "../../../../lib/blog-utils";
 import { notFound } from "next/navigation";
 import EditPostForm from "../../components/EditPostForm";
 
-// Use Next.js built-in page props type
-type PageProps = {
-  params: {
-    id: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
-};
+interface EditPostParams {
+  id: string;
+}
 
-export default async function EditPostPage({ params }: PageProps) {
+export default async function EditPostPage({
+  params,
+}: {
+  params: EditPostParams;
+}) {
   // Fetch the post data by ID
   const post = await getPostById(params.id);
 
