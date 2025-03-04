@@ -1,4 +1,4 @@
-import "server-only"; // Add this to prevent client-side usage
+// import "server-only"; // Add this to prevent client-side usage
 import connectToDatabase from "./mongodb";
 import Post, { IPost } from "../models/Posts";
 
