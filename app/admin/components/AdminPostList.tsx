@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FaEdit, FaTrash } from "react-icons/fa";
-import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
+import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
 // Define the Post interface (now with string IDs and ISO date strings)
 interface Post {

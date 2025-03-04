@@ -60,7 +60,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      message: "Post deleted successfully",
+    });
   } catch (error) {
     console.error("Error deleting post:", error);
     return NextResponse.json(
