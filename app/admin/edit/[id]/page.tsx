@@ -1,3 +1,4 @@
+// app/admin/edit/[id]/page.tsx
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPostById } from "../../../../lib/blog-utils";

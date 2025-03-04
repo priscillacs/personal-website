@@ -13,7 +13,16 @@ const categories = [
   { id: "personal", name: "Personal" },
   { id: "project", name: "Project" },
 ];
-
+interface EditPostFormProps {
+  initialData: {
+    _id: string;
+    title: string;
+    content: string;
+    slug: string;
+    // Add other post properties here
+    [key: string]: any;
+  };
+}
 export default function EditPostForm({ initialData }) {
   const router = useRouter();
   const [formData, setFormData] = useState({
