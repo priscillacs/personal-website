@@ -347,20 +347,6 @@ export default function NewPostPage() {
               }}
             />
 
-            {/* Debug image test */}
-            {previewMode && (
-              <div className="mb-4 p-2 border border-dashed border-gray-300">
-                <p className="text-xs text-gray-500 mb-2">Debug Image Test:</p>
-                <img
-                  src="/uploads/jX2jmCC2.jpg"
-                  alt="Test Image"
-                  width="300"
-                  height="auto"
-                  className="blog-post-image"
-                />
-              </div>
-            )}
-
             {formData.tags && (
               <div className="mt-8 flex flex-wrap gap-2">
                 {formData.tags.split(",").map((tag, index) => (
