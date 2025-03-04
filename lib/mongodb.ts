@@ -1,4 +1,16 @@
+// lib/mongodb.ts
 import mongoose from "mongoose";
+
+// Clean the MongoDB URI to remove trailing ? or & and any empty parameters
+function cleanMongoURI(uri: string): string {
+  // Replace any empty parameters like "appName=" or "&appName="
+  let cleanedURI = uri.replace(/([?&])([\w]+)=(?=&|$)/g, "");
+
+  // Remove trailing ? or &
+  cleanedURI = cleanedURI.replace(/[?&]$/g, "");
+
+  return cleanedURI;
+}
 
 // Define types for the global variable
 declare global {
@@ -19,54 +31,38 @@ if (!MONGODB_URI) {
   );
 }
 
-/**
- * Global is used here to maintain a cached connection across hot reloads
- * in development. This prevents connections growing exponentially
- * during API Route usage.
- */
-// Define the cached type explicitly
+// Clean the URI before using it
+const cleanedURI = cleanMongoURI(MONGODB_URI);
+
+// Global is used here to maintain a cached connection across hot reloads
 type MongooseCache = {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
 };
 
-// Initialize cached with proper type checking
 const cached: MongooseCache = global.mongoose || { conn: null, promise: null };
 
-// Set the global cache
 if (!global.mongoose) {
   global.mongoose = cached;
 }
 
-// async function connectToDatabase() {
-//   if (cached.conn) {
-//     return cached.conn;
-//   }
-
-//   if (!cached.promise) {
-//     const opts = {
-//       bufferCommands: false,
-//     };
-
-//     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-//       return mongoose;
-//     });
-//   }
-//   cached.conn = await cached.promise;
-//   return cached.conn;
-// }
 async function connectToDatabase() {
   if (cached.conn) {
     return cached.conn;
   }
 
   if (!cached.promise) {
-    // Use minimal options to avoid conflicts
-    cached.promise = mongoose.connect(MONGODB_URI).then((mongoose) => {
-      return mongoose;
-    });
+    // Use explicit options to avoid conflicts
+    cached.promise = mongoose
+      .connect(cleanedURI, {
+        bufferCommands: false,
+      })
+      .then((mongoose) => {
+        return mongoose;
+      });
   }
   cached.conn = await cached.promise;
   return cached.conn;
 }
+
 export default connectToDatabase;
