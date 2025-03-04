@@ -2,6 +2,7 @@
 import { getCategories, getPostsByCategory } from "../../../../lib/blog-utils";
 import PostCard from "../../components/PostCard";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 
 // Make this function optional
@@ -23,7 +24,6 @@ export async function generateMetadata({
 }: {
   params: { category: string };
 }) {
-  // Fix: Don't await params.category, it's already a string
   const category = params.category;
 
   const formattedCategory = category
@@ -37,13 +37,22 @@ export async function generateMetadata({
   };
 }
 
+function PostsContent({ posts }) {
+  return (
+    <div className="grid grid-cols-1 gap-10">
+      {posts.map((post) => (
+        <PostCard key={post._id.toString()} post={post} />
+      ))}
+    </div>
+  );
+}
+
 export default async function CategoryPage({
   params,
 }: {
   params: { category: string };
 }) {
   try {
-    // Fix: Don't await params.category, it's already a string
     const category = params.category;
     const decodedCategory = decodeURIComponent(category);
 
@@ -76,11 +85,9 @@ export default async function CategoryPage({
         </div>
 
         {posts.length > 0 ? (
-          <div className="grid grid-cols-1 gap-10">
-            {posts.map((post) => (
-              <PostCard key={post._id.toString()} post={post} />
-            ))}
-          </div>
+          <Suspense fallback={<div>Loading posts...</div>}>
+            <PostsContent posts={posts} />
+          </Suspense>
         ) : (
           <div className="text-center py-10">
             <p className="text-gray-500">No posts found in this category.</p>
@@ -89,7 +96,6 @@ export default async function CategoryPage({
       </div>
     );
   } catch (error) {
-    // Add error handling to prevent build failures
     console.error("Error in CategoryPage:", error);
     return (
       <div className="text-center py-10">

@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import CategoryList from "./CategoryList";
+import { Suspense } from "react";
 
 type Props = {
   categories: string[];
@@ -19,11 +20,13 @@ export default function ConditionalSidebar({
   if (pathname === "/blog" || pathname.startsWith("/blog/category/")) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-        <CategoryList
-          categories={categories}
-          counts={categoryCounts}
-          isInlineCategoryFilter={pathname === "/blog"}
-        />
+        <Suspense fallback={<div>Loading categories...</div>}>
+          <CategoryList
+            categories={categories}
+            counts={categoryCounts}
+            isInlineCategoryFilter={pathname === "/blog"}
+          />
+        </Suspense>
       </div>
     );
   }

@@ -52,17 +52,33 @@ async function connectToDatabase() {
   }
 
   if (!cached.promise) {
-    // Use explicit options to avoid conflicts
+    // Use optimized connection options for better performance
     cached.promise = mongoose
       .connect(cleanedURI, {
         bufferCommands: false,
+        maxPoolSize: 10, // Add connection pooling
+        socketTimeoutMS: 30000, // Add timeout
+        connectTimeoutMS: 30000, // Add connection timeout
+        serverSelectionTimeoutMS: 5000, // Faster server selection
+        heartbeatFrequencyMS: 10000, // Reduced heartbeat frequency
       })
       .then((mongoose) => {
+        console.log("MongoDB connected successfully");
         return mongoose;
+      })
+      .catch((err) => {
+        console.error("MongoDB connection error:", err);
+        throw err;
       });
   }
-  cached.conn = await cached.promise;
-  return cached.conn;
+
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (error) {
+    cached.promise = null; // Reset the promise on error
+    throw error;
+  }
 }
 
 export default connectToDatabase;

@@ -1,23 +1,27 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { Suspense, useState, useEffect } from "react";
 
-interface CategoryListProps {
-  categories: string[];
-  counts?: Record<string, number>;
-  isInlineCategoryFilter?: boolean;
-}
-
-export default function CategoryList({
-  categories,
-  counts = {},
-  isInlineCategoryFilter = false,
-}: CategoryListProps) {
+// Create a client component that safely uses useSearchParams
+function CategoryListContent({ 
+  categories, 
+  counts = {}, 
+  isInlineCategoryFilter = false 
+}) {
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const currentCategory = searchParams.get("category");
+  const [currentCategory, setCurrentCategory] = useState(null);
+  
+  // Use this instead of useSearchParams directly
+  useEffect(() => {
+    // Extract the category from URL instead of using useSearchParams
+    if (isInlineCategoryFilter) {
+      const urlParams = new URLSearchParams(window.location.search);
+      setCurrentCategory(urlParams.get("category"));
+    }
+  }, [isInlineCategoryFilter, pathname]);
 
   // Animation variants
   const containerVariants = {
@@ -68,7 +72,7 @@ export default function CategoryList({
           animate="show"
         >
           <motion.li variants={itemVariants}>
-            <a
+            
               href="#"
               onClick={(e) => {
                 e.preventDefault();
@@ -91,7 +95,7 @@ export default function CategoryList({
 
           {categories.map((category) => (
             <motion.li key={category} variants={itemVariants}>
-              <a
+              
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
@@ -126,5 +130,14 @@ export default function CategoryList({
         <p className="text-gray-500">No categories found</p>
       )}
     </div>
+  );
+}
+
+// Main component that wraps the content in a Suspense boundary
+export default function CategoryList(props) {
+  return (
+    <Suspense fallback={<div className="bg-white rounded-lg shadow-md p-6">Loading categories...</div>}>
+      <CategoryListContent {...props} />
+    </Suspense>
   );
 }
