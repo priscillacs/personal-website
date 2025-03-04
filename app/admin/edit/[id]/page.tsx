@@ -1,15 +1,14 @@
 // app/admin/edit/[id]/page.tsx
-import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPostById } from "../../../../lib/blog-utils";
 import EditPostForm from "../../components/EditPostForm";
 
-// Fixed params type to match Next.js expectations
-export default async function EditPostPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+// Using a simpler type declaration
+interface PageParams {
+  id: string;
+}
+
+export default async function EditPostPage({ params }: { params: PageParams }) {
   try {
     const { id } = params;
 
@@ -54,12 +53,8 @@ export default async function EditPostPage({
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-// Optional: generate metadata for SEO
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
+// Simplified metadata function with same parameter type
+export async function generateMetadata({ params }: { params: PageParams }) {
   const post = await getPostById(params.id);
 
   return {
