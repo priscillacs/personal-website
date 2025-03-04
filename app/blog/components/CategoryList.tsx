@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Suspense, useState, useEffect } from "react";
 
@@ -18,16 +18,24 @@ function CategoryListContent({
 }: CategoryListContentProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
 
   // Use this instead of useSearchParams directly
   useEffect(() => {
-    // Extract the category from URL instead of using useSearchParams
     if (isInlineCategoryFilter) {
-      const urlParams = new URLSearchParams(window.location.search);
-      setCurrentCategory(urlParams.get("category"));
+      // Get category from search params
+      const category = searchParams.get("category");
+      setCurrentCategory(category);
+    } else if (pathname.startsWith("/blog/category/")) {
+      // Extract category from pathname for category pages
+      const pathParts = pathname.split("/");
+      const categoryFromPath = pathParts[pathParts.length - 1];
+      setCurrentCategory(categoryFromPath);
+    } else {
+      setCurrentCategory(null);
     }
-  }, [isInlineCategoryFilter, pathname]);
+  }, [isInlineCategoryFilter, pathname, searchParams]);
 
   // Animation variants
   const containerVariants = {
@@ -53,22 +61,46 @@ function CategoryListContent({
 
   // Handle category click for in-page filtering
   const handleCategoryClick = (category: string | null) => {
-    if (!isInlineCategoryFilter) return; // Only handle clicks in main blog page
-
-    if (category) {
-      router.push(
-        `/blog?category=${encodeURIComponent(
+    if (isInlineCategoryFilter) {
+      // For main blog page, update URL query parameter
+      if (category) {
+        const encodedCategory = encodeURIComponent(
           category.toLowerCase().replace(/\s+/g, "-")
-        )}`
-      );
+        );
+        router.push(`/blog?category=${encodedCategory}`);
+        setCurrentCategory(encodedCategory);
+      } else {
+        router.push("/blog");
+        setCurrentCategory(null);
+      }
     } else {
-      router.push("/blog");
+      // For other pages, navigate to category page
+      if (category) {
+        const encodedCategory = encodeURIComponent(
+          category.toLowerCase().replace(/\s+/g, "-")
+        );
+        router.push(`/blog/category/${encodedCategory}`);
+      } else {
+        router.push("/blog");
+      }
     }
   };
 
+  // Function to determine if a category is active
+  const isCategoryActive = (category: string | null): boolean => {
+    if (category === null) {
+      return !currentCategory;
+    }
+
+    const normalizedCategory = category.toLowerCase().replace(/\s+/g, "-");
+    return normalizedCategory === currentCategory;
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Categories</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+        Categories
+      </h3>
 
       {categories.length > 0 ? (
         <motion.ul
@@ -85,15 +117,13 @@ function CategoryListContent({
                 handleCategoryClick(null);
               }}
               className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer ${
-                !currentCategory && isInlineCategoryFilter
-                  ? "bg-blue-100 text-blue-700"
-                  : pathname === "/blog" && !isInlineCategoryFilter
-                  ? "bg-blue-100 text-blue-700"
-                  : "hover:bg-gray-100"
+                isCategoryActive(null)
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
               <span>All Posts</span>
-              <span className="text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+              <span className="text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
                 {totalPosts}
               </span>
             </a>
@@ -108,23 +138,14 @@ function CategoryListContent({
                   handleCategoryClick(category);
                 }}
                 className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer ${
-                  isInlineCategoryFilter &&
-                  currentCategory ===
-                    category.toLowerCase().replace(/\s+/g, "-")
-                    ? "bg-blue-100 text-blue-700"
-                    : !isInlineCategoryFilter &&
-                      pathname.includes(
-                        `/blog/category/${encodeURIComponent(
-                          category.toLowerCase().replace(/\s+/g, "-")
-                        )}`
-                      )
-                    ? "bg-blue-100 text-blue-700"
-                    : "hover:bg-gray-100"
+                  isCategoryActive(category)
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
                 <span className="capitalize">{category}</span>
                 {counts[category] && (
-                  <span className="text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                  <span className="text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
                     {counts[category]}
                   </span>
                 )}
@@ -133,7 +154,7 @@ function CategoryListContent({
           ))}
         </motion.ul>
       ) : (
-        <p className="text-gray-500">No categories found</p>
+        <p className="text-gray-500 dark:text-gray-400">No categories found</p>
       )}
     </div>
   );
@@ -144,7 +165,7 @@ export default function CategoryList(props: CategoryListContentProps) {
   return (
     <Suspense
       fallback={
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           Loading categories...
         </div>
       }

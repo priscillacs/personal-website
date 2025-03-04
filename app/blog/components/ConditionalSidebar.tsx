@@ -19,7 +19,10 @@ export default function ConditionalSidebar({
   // Hide on individual post pages
   if (pathname === "/blog" || pathname.startsWith("/blog/category/")) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+      <div
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mt-10 ml-8"
+        style={{ position: "static", top: "auto", transform: "none" }}
+      >
         <Suspense fallback={<div>Loading categories...</div>}>
           <CategoryList
             categories={categories}
