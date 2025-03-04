@@ -15,17 +15,17 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
 
-  // Don't show the admin layout on the login page
-  if (pathname === "/admin/login") {
-    return <>{children}</>;
-  }
-
   // Redirect to login if not authenticated
   useEffect(() => {
     if (status === "unauthenticated" && pathname !== "/admin/login") {
       router.push("/admin/login");
     }
   }, [status, pathname, router]);
+
+  // Don't show the admin layout on the login page
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
 
   // Show loading state while checking authentication
   if (status === "loading") {

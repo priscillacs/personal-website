@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 // Define types for the global variable
 declare global {
-  var mongoose:
+  let mongoose:
     | {
         conn: typeof mongoose | null;
         promise: Promise<typeof mongoose> | null;
