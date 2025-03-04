@@ -1,17 +1,14 @@
 import { Metadata } from "next";
-import { getPostById } from "../../../../lib/blog-utils";
 import { notFound } from "next/navigation";
+import { getPostById } from "../../../../lib/blog-utils";
 import EditPostForm from "../../components/EditPostForm";
 
-interface EditPostParams {
-  id: string;
-}
+// Define params type using Next.js 15's conventions
+type Props = {
+  params: { id: string };
+};
 
-export default async function EditPostPage({
-  params,
-}: {
-  params: EditPostParams;
-}) {
+export default async function EditPostPage({ params }: Props) {
   // Fetch the post data by ID
   const post = await getPostById(params.id);
 
