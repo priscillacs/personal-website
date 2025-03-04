@@ -3,7 +3,7 @@ import { getPostById } from "../../../../lib/blog-utils";
 import { notFound } from "next/navigation";
 import EditPostForm from "../../components/EditPostForm";
 
-// Define the props type explicitly
+// Define the props type
 type EditPostPageProps = {
   params: {
     id: string;
