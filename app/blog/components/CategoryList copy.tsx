@@ -1,33 +1,23 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Suspense, useState, useEffect } from "react";
 
-interface CategoryListContentProps {
+interface CategoryListProps {
   categories: string[];
   counts?: Record<string, number>;
   isInlineCategoryFilter?: boolean;
 }
 
-// Create a client component that safely uses useSearchParams
-function CategoryListContent({
+export default function CategoryList({
   categories,
   counts = {},
   isInlineCategoryFilter = false,
-}: CategoryListContentProps) {
+}: CategoryListProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [currentCategory, setCurrentCategory] = useState<string | null>(null);
-
-  // Use this instead of useSearchParams directly
-  useEffect(() => {
-    // Extract the category from URL instead of using useSearchParams
-    if (isInlineCategoryFilter) {
-      const urlParams = new URLSearchParams(window.location.search);
-      setCurrentCategory(urlParams.get("category"));
-    }
-  }, [isInlineCategoryFilter, pathname]);
+  const searchParams = useSearchParams();
+  const currentCategory = searchParams.get("category");
 
   // Animation variants
   const containerVariants = {
@@ -136,20 +126,5 @@ function CategoryListContent({
         <p className="text-gray-500">No categories found</p>
       )}
     </div>
-  );
-}
-
-// Main component that wraps the content in a Suspense boundary
-export default function CategoryList(props: CategoryListContentProps) {
-  return (
-    <Suspense
-      fallback={
-        <div className="bg-white rounded-lg shadow-md p-6">
-          Loading categories...
-        </div>
-      }
-    >
-      <CategoryListContent {...props} />
-    </Suspense>
   );
 }
