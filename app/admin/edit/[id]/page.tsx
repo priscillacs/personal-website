@@ -1,16 +1,16 @@
+import { Metadata } from "next";
 import { getPostById } from "../../../../lib/blog-utils";
 import { notFound } from "next/navigation";
 import EditPostForm from "../../../components/EditPostForm";
 
 // Define the params type
-type PageParams = {
+export type PageProps = {
   params: {
     id: string;
   };
 };
 
-// Export the page component as default
-export default async function EditPostPage({ params }: PageParams) {
+export default async function EditPostPage({ params }: PageProps) {
   // Fetch the post data by ID
   const post = await getPostById(params.id);
 
