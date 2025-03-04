@@ -29,6 +29,21 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
 
+    // Debug received data
+    console.log("POST request data:", {
+      title: data.title,
+      slug: data.slug,
+      contentExists: !!data.content,
+      contentLength: data.content ? data.content.length : 0,
+    });
+
+    if (!data.content) {
+      return NextResponse.json(
+        { error: "Content is required" },
+        { status: 400 }
+      );
+    }
+
     // Sanitize HTML content if needed
     // (Consider adding a sanitization library like DOMPurify server-side)
 

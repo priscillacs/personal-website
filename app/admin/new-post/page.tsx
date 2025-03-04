@@ -6,7 +6,7 @@ import Link from "next/link";
 import { FaArrowLeft, FaSave } from "react-icons/fa";
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
-import { configuredMarked } from "../../../utils/markdownConfig"; // Import our custom marked configuration
+import { configuredMarked } from "../../../utils/markdownConfig.js"; // Note the .js extension
 
 // Categories for the dropdown
 const categories = [
@@ -31,7 +31,7 @@ export default function NewPostPage() {
     title: "",
     slug: "",
     excerpt: "",
-    content: "", // This will now be markdown
+    content: "", // Initialize with empty string, not null or undefined
     category: "software-development",
     tags: "",
     published: false,
@@ -216,6 +216,16 @@ export default function NewPostPage() {
     setIsSubmitting(true);
     setErrorMessage(null);
 
+    if (!formData.title) {
+      setErrorMessage("Title is required");
+      return;
+    }
+
+    if (!formData.content) {
+      setErrorMessage("Content is required");
+      return;
+    }
+
     // Transform tags from comma-separated string to array
     const tagsArray = formData.tags
       .split(",")
@@ -223,6 +233,8 @@ export default function NewPostPage() {
       .filter(Boolean);
 
     try {
+      console.log("Submitting data:", formData);
+
       const response = await fetch("/api/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

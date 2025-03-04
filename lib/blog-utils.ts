@@ -205,3 +205,25 @@ export async function getPostById(id: string) {
     return null;
   }
 }
+
+// Add this function to your blog-utils.ts file
+export async function checkSlugExists(slug: string): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `/api/posts/check-slug?slug=${encodeURIComponent(slug)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data = await response.json();
+    return data.exists;
+  } catch (error) {
+    console.error("Error checking slug:", error);
+    // Default to assuming it exists on error (safer)
+    return true;
+  }
+}
