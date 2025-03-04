@@ -3,14 +3,17 @@ import { notFound } from "next/navigation";
 import { getPostById } from "../../../../lib/blog-utils";
 import EditPostForm from "../../components/EditPostForm";
 
-export default async function EditPostPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function EditPostPage(props: any) {
   try {
+    // Access id using SearchParams or context instead
+    const id = props.params?.id;
+
+    if (!id) {
+      return notFound();
+    }
+
     // Fetch the post data by ID
-    const post = await getPostById(params.id);
+    const post = await getPostById(id);
 
     if (!post) {
       return notFound();
@@ -42,5 +45,6 @@ export default async function EditPostPage({
   }
 }
 
-// This tells Next.js this is a server component
+// These configuration exports help Next.js understand how to handle this page
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
