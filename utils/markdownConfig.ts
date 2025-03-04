@@ -42,3 +42,6 @@ export function configureMarkdownRenderer() {
 
 // Export configured marked instance
 export const configuredMarked = configureMarkdownRenderer();
+
+// Export the main marked function as well
+export default marked;
