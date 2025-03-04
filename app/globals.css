@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+body {
+  color: rgb(var(--foreground-rgb));
+  background: #f8fafc;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom animations */
+@layer utilities {
+  .animate-blink {
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+}
+
+/* Custom styles for blog content */
+.prose pre {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.prose code {
+  background-color: #f1f5f9;
+  color: #3b82f6;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.prose pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 2rem auto;
+}
+.prose blockquote {
+  border-left-color: #bfdbfe;
+  background-color: #f8fafc;
+  padding: 1rem;
+  border-radius: 0.375rem;
+}
+
+/* Add these styles for blog post images */
+.blog-post-image {
+  max-width: 100%;
+  height: auto !important;
+  margin: 1.5rem 0;
+  border-radius: 4px;
+}
