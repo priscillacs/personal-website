@@ -55,7 +55,6 @@ const skills = [
       { name: "Node.js", icon: <FaServer /> },
       { name: "Express.js", icon: <FaServer /> },
       { name: "REST APIs", icon: <FaServer /> },
-      { name: "Firebase", icon: <FaDatabase /> },
     ],
   },
   {
@@ -66,6 +65,7 @@ const skills = [
       { name: "PostgreSQL", icon: <FaDatabase /> },
       { name: "MySQL", icon: <FaDatabase /> },
       { name: "Firebase", icon: <FaDatabase /> },
+      { name: "Neo4j", icon: <FaDatabase /> },
     ],
   },
   {
