@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
+import Link from "next/link";
 
 export default function AboutSection() {
   const ref = useRef(null);
@@ -35,6 +36,13 @@ export default function AboutSection() {
               different perspectives, and appreciating the beauty in both grand
               adventures and quiet moments.
             </p>
+            <div className="mt-8">
+              <Link href="/blog">
+                <button className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md shadow-sm transition duration-300 ease-in-out transform hover:-translate-y-1">
+                  Read My Blog
+                </button>
+              </Link>
+            </div>
           </div>
         </motion.div>
       </div>
