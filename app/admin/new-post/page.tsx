@@ -14,6 +14,7 @@ const categories = [
   { name: "Travel", value: "travel" },
   { name: "Personal", value: "personal" },
   { name: "Project", value: "project" },
+  { name: "Reflection", value: "reflection" },
 ];
 
 const generateSlug = (title: string) => {

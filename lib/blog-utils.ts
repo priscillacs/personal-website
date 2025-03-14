@@ -99,6 +99,7 @@ export function normalizeCategory(category: string): string {
       travel: "travel",
       personal: "personal",
       project: "project",
+      reflection: "reflection",
       // Add any other variations that users might input
     };
 
