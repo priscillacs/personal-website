@@ -13,6 +13,7 @@ const categories = [
   { id: "personal", name: "Personal" },
   { id: "project", name: "Project" },
   { id: "reflection", name: "Reflection" },
+  { id: "Movie", value: "Movie" },
 ];
 
 // Define the Post interface with proper TypeScript types
